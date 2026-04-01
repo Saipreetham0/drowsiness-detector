@@ -2,6 +2,8 @@
 
 A real-time drowsiness and distraction detection system built for the **Raspberry Pi 4B** using a Pi Camera Module and an active buzzer. No internet connection or cloud service required — everything runs locally on the Pi.
 
+Live preview is accessible from any device on the same WiFi network via browser at `http://<pi-ip>:8080`.
+
 ---
 
 ## How It Works
@@ -14,6 +16,8 @@ Two alert rules run continuously:
 |------|---------|--------|
 | Drowsiness | Eyes closed for 20 consecutive frames | Buzzer sounds for 2 seconds |
 | Distraction | Gaze locked left or right for 15 consecutive frames | Buzzer sounds for 2 seconds |
+
+A live MJPEG stream with on-screen status overlay runs in the background and is viewable from any browser on the local network.
 
 ---
 
@@ -51,7 +55,7 @@ Pi GPIO 23 (pin 16) ──[1kΩ]──► BC547 BASE   (middle pin, flat face to
 
 ```
 drowsiness-detector/
-├── main.py            # Main detection loop
+├── main.py            # Main detection loop + MJPEG stream server
 ├── eye_game.py        # Face + eye detection and gaze analysis
 ├── config.py          # Tunable parameters
 ├── test_camera.py     # Standalone camera test (saves snapshots)
@@ -59,7 +63,7 @@ drowsiness-detector/
 ├── setup.sh           # One-time system setup script
 ├── run.sh             # Launch script
 ├── requirements.txt   # Python dependencies
-├── image_data/        # Runtime frame storage (auto-created)
+├── image_data/        # Runtime frame storage (auto-created, git-ignored)
 └── known_faces/       # Reserved for future face recognition
 ```
 
@@ -81,16 +85,46 @@ This installs system packages (`python3-opencv`, `opencv-data`), creates a virtu
 ## Running
 
 ```bash
-./run.sh
-```
-
-Or directly:
-
-```bash
 python3 main.py
 ```
 
-Press **Ctrl+C** to stop. The camera and GPIO shut down cleanly.
+Or using the launch script:
+
+```bash
+./run.sh
+```
+
+On startup you will see:
+
+```
+[INFO] Live preview → http://192.168.1.x:8080
+[INFO] Starting — press Ctrl+C to quit.
+```
+
+Open the URL in any browser on the same WiFi to watch the live feed.
+
+Press **Ctrl+C** to stop — camera and GPIO shut down cleanly.
+
+---
+
+## Live Preview
+
+The stream runs on port **8080** and is accessible from any device on the same network:
+
+```
+http://<raspberry-pi-ip>:8080
+```
+
+**Status overlay colours:**
+
+| Colour | Meaning |
+|--------|---------|
+| Green `CENTER` | Eyes open, looking forward — normal |
+| Red `CLOSED 45%` | Eyes closing — percentage toward drowsiness alert |
+| Orange `GAZE LEFT 80%` | Looking away — percentage toward distraction alert |
+| Grey `NO FACE` | No face detected in frame |
+
+A green rectangle is drawn around the detected face in real time.
 
 ---
 
@@ -116,7 +150,7 @@ Edit `config.py` to tune detection sensitivity:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `BUZZER_PIN` | `23` | BCM GPIO pin for buzzer transistor base |
+| `BUZZER_PIN` | `23` | BCM GPIO pin connected to BC547 base |
 | `EAR_CONSEC_FRAMES` | `20` | Frames with closed eyes before drowsiness alert |
 | `SAME_DIR_CONSEC_FRAMES` | `15` | Frames with fixed off-centre gaze before distraction alert |
 | `FRAME_SCALE` | `0.25` | Frame downscale factor for face detection (lower = faster) |
@@ -126,11 +160,11 @@ Edit `config.py` to tune detection sensitivity:
 
 ## Dependencies
 
-- `python3-opencv` — face and eye detection (Haar cascades)
-- `picamera2` — Pi Camera Module interface
-- `RPi.GPIO` — GPIO control for buzzer circuit
+- `python3-opencv` — face and eye detection via Haar cascades
+- `picamera2` — Pi Camera Module (OV5647) interface via libcamera
+- `RPi.GPIO` — GPIO control for buzzer transistor circuit
 
-All Haar cascade XML files are read from `/usr/share/opencv4/haarcascades/` (installed with `opencv-data`).
+Haar cascade XML files are read from `/usr/share/opencv4/haarcascades/` (installed with `opencv-data`).
 
 ---
 
@@ -138,7 +172,9 @@ All Haar cascade XML files are read from `/usr/share/opencv4/haarcascades/` (ins
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| `Device or resource busy` on camera | Another process has the camera open | Run `sudo fuser /dev/video0` and kill the process |
-| No face detected | Poor lighting or too far from camera | Sit 30–60 cm from camera, ensure good lighting |
-| Buzzer silent | Wiring issue or wrong buzzer type | Check BC547 pinout (C-B-E flat side), verify 9–12V supply connected |
-| `libcamera` errors in terminal | Normal informational logs | Safe to ignore — add `2>/dev/null` to suppress |
+| `Device or resource busy` | Another process holds the camera | Run `sudo fuser /dev/video0` and kill the process |
+| Blue tint in stream | Colour format mismatch | Already fixed — `RGB888` format used, no conversion |
+| No face detected | Poor lighting or distance | Sit 30–60 cm from camera in good light |
+| Buzzer silent | Wiring or voltage issue | Check BC547 pinout (C–B–E flat side), verify 9–12V supply |
+| Stream not loading | Firewall or wrong IP | Check Pi IP with `hostname -I`, ensure port 8080 is open |
+| libcamera logs in terminal | Normal info messages | Run with `python3 main.py 2>/dev/null` to suppress |

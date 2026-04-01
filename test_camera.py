@@ -18,9 +18,8 @@ print(f"[INFO] Camera started (OV5647 640x480). Saving {NUM_SHOTS} snapshots to 
 
 for i in range(NUM_SHOTS):
     frame = picam2.capture_array()
-    bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     path = f"{SAVE_DIR}/test_{i+1}.jpg"
-    cv2.imwrite(path, bgr)
+    cv2.imwrite(path, frame)
     h, w = bgr.shape[:2]
     print(f"  Saved {path}  ({w}x{h})")
     time.sleep(0.5)
