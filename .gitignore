@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+venv/
+image_data/*.jpg
+image_data/*.png
+test_snapshot.jpg
+.lgd-nfy0
