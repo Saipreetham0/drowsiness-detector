@@ -1,5 +1,22 @@
 # Driver Drowsiness Detector
 
+<p align="left">
+  <a href="https://github.com/Saipreetham0/drowsiness-detector/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Saipreetham0/drowsiness-detector?style=social"></a>
+  <a href="https://github.com/Saipreetham0/drowsiness-detector/network/members"><img alt="Forks" src="https://img.shields.io/github/forks/Saipreetham0/drowsiness-detector?style=social"></a>
+  <img alt="License" src="https://img.shields.io/github/license/Saipreetham0/drowsiness-detector">
+</p>
+
+> ⭐ **Found this useful? Star the repo** — it helps other makers find it.
+
+## 📸 Demo
+
+<!-- Drop a wiring photo and a short demo GIF into docs/ then uncomment:
+![Demo](docs/demo.gif)
+![Wiring](docs/wiring.jpg)
+-->
+_Demo GIF and wiring photo coming soon._
+
+
 A real-time drowsiness and distraction detection system built for the **Raspberry Pi 4B** using a Pi Camera Module and an active buzzer. No internet connection or cloud service required — everything runs locally on the Pi.
 
 Live preview is accessible from any device on the same WiFi network via browser at `http://<pi-ip>:8080`.
